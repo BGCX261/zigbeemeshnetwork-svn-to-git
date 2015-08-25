@@ -1,0 +1,12 @@
+#use "INTTEST.ICB"
+
+void main()
+{
+    while(!stop_button())
+      {
+        if(start_button())
+          {
+            printf("%b \n",retval(0));
+        }
+    }
+}

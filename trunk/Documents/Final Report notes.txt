@@ -1,0 +1,41 @@
+1 Introduction:
+
+2 Safety:
+
+3 Research + Design:
+- High level design / block diagram
+
+(choices of...)
+- Hardware platforms
+	- Software (C/asm)
+- wireless transmitters
+- human interface
+	- Control sticks, terminal
+- cars/vehicle
+	- what is required of the cars? not much
+	- turn vs skid vs servo
+
+4 Implementation:
+- Car drive system
+	- motor turn duration
+- Controller
+	- analog vs digital control stick
+- Wireless system
+	- xbee breakout board
+
+5 Testing + implementation:
+- car drive system
+	- interactive C program to cycle through commands
+		- resides on dif handyboard, communicates via crossover
+		cable
+- controller
+- wireless system
+	- injecting packets directly from a terminal
+- end to end testing
+	- control vehicle with the hardware interface (joysticks) through the network
+		- ...using crossover cable
+
+6 Conclusions:
+- accomplishments
+- future work
+- conclusion

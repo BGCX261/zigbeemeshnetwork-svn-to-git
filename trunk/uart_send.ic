@@ -1,0 +1,78 @@
+#include serialio.c
+
+#define BAUD 0x102B 
+#define SCCR1 0x102C
+#define SCCR2 0x102D
+#define SCSR 0x102E
+#define SCDR 0x102F
+
+void initializeUart()
+{
+    //Set baud rate to 9615 (closest to 9600 for our crystal)
+    //Disabled bit 7 (clear baud rate counter bit (test))
+    //Disabled bit 3 (SCI baud rate clock check bit (test))
+    poke(BAUD,0b00110000);
+    
+    //Disable receive/transmit data bit 8
+    //8 data bits, 1 stop bit
+    //Disable address mark wake mode
+    poke(SCCR1,0x00);
+    
+    //Interrupt when data received
+    //Enable Transmitter/receiver
+    poke(SCCR2,0b00001100);
+    //(no interrupts)
+    //(no receiver
+    //poke(SCCR2,0b00001000);
+    
+}
+
+void main()
+{
+    int sendchar;
+    int receivedChar;
+    //Read in defaults so we can reset them afterwards
+    int defaultbaud;
+    int defaultsccr1;
+    int defaultsccr2;
+    
+    defaultbaud = peek(BAUD);
+    defaultsccr1 = peek(SCCR1);
+    defaultsccr2 = peek(SCCR2);
+    
+    printf("\nTransmitter Running...");
+    
+    disable_pcode_serial();
+    initializeUart();
+    
+    while(1)
+      {
+        if(start_button())
+          {
+            
+            //serial_putchar(sendchar);
+            if(peek(SCSR) & 0x80)
+              {
+                sendchar = knob();
+                poke(SCDR, sendchar);
+                printf("\nSent: %d   ", sendchar);
+                //sleep(0.2);
+                //receivedChar = peek(SCDR);
+                //printf("Received: %d", receivedChar);
+            }
+            
+            
+        }
+        if(stop_button())
+          {
+            printf("\nReceived stop button");
+            //Reset the uart stuff
+            poke(BAUD,defaultbaud);
+            poke(SCCR1,defaultsccr1);
+            poke(SCCR2,defaultsccr2);
+            enable_pcode_serial();
+            break;
+        }
+    }
+    enable_pcode_serial();
+}

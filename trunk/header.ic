@@ -1,0 +1,29 @@
+/* 
+ * This is a header file with various constants defined for use by car_drive and car_control programs.
+ * 
+ * @author Peter Fyon
+ * @date February 5, 2010
+ *
+ */
+
+//Define opcodes
+//Included in the comments are the required bits and the 'don't cares'
+//Be sure you don't send conflicting opcodes
+
+#define FORWARD 0x08 // xxxx 10xx
+#define REVERSE 0x04 // xxxx 01xx
+#define LEFT 0x02 // xxxx xx10
+#define RIGHT 0x01 // xxxx xx01
+#define CENTRE 0x10 // xxx1 xx00
+#define DONOTHING 0x00 // xxx0 0000
+
+//IR decoding takes up 11% of the processor when it's enabled (which is default)
+void disableIRDecoding()
+{
+    bit_clear(0x39, 0b00000010);
+}
+
+void enableIRDecoding()
+{
+    bit_set(0x39, 0b00000010);
+}

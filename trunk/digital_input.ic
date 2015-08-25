@@ -1,0 +1,13 @@
+void main()
+{
+    int digital_in;
+    while(1)
+      {
+        digital_in = digital(15);
+        printf("%d\n",digital_in);
+        if(stop_button())
+          {
+            return; 
+        }
+    }
+}

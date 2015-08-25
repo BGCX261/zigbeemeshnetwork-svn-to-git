@@ -1,0 +1,58 @@
+Design decisions:
+- C vs Interactive C vs Assembly
+	- Interactive had all the built in libraries
+		- Downside: poor community/documentation, not terribly efficient, not real-time
+		- Upside: Interactive C IDE is free
+	- C would need to write our own libraries
+		- Downside: more work, ICC11 is not free
+		- Upside: more control over board function, interrupts are easy to implement, can be real-time
+	- Assembly required for interrupts
+		- Downside: have to write our own libraries, we have less experience with asm, potentially less efficient than C with a good assembler
+		- Upside: can be more efficient code, control over all interrupts and board functions, can be real-time
+	- XBee modules are not real-time, but we need interrupts.
+		- Asm can be used (in theory) with interactive C to provide interrupts with the use of interactive C's libraries
+			- (even code given in the manual doesn't work reliably for interrupts)
+
+- Skid steering vs turn steering
+	- Turn steering is more precise
+	- Skid steering relies on friction between wheels and ground (which may not be the same across the car)
+
+- Servo vs motor
+	- Motor = all left or all right
+	- Servo = fine control
+		- Not particularly useful for us, but for future designs we might want the fine control
+
+- Use of handyboards for cars and controller
+	- Many available in the lab
+		- If one board is defective, there are others we can use
+		- (saves money)
+	- Powerful enough to handle tasks (if a bit overpowered for the controller)
+	- No real drawback to using them over another board
+
+- Use of XBee modules over other chips
+	- Two development kits on hand (made us more familiar)
+		- Saves money
+	- Fairly user friendly
+		- Available in convenient PDIP (plastic dual inline package) compared to TI's smd (surface mount device) only chips
+	- Not too expensive (not doing large scale)
+	- Big community
+	- Low power modules:
+		- Easier to test the mesh network with, since we don't need large distances between the nodes
+		- More realistic for some applications
+		- Pin compatible with high-power (pro) nodes for extensibility
+		- cheaper
+
+- Design of protocol
+	- Uses one byte for commands
+		- Four bits for motion
+		- Remaining four bits available for future designs
+		- Packet size is less than the maximum buffer size for XBees with security enabled (80 bytes), so payload can be sent in entirety in one frame
+			- Reduces overhead (in the form of headers for each packet) and network congestion by sending only one packet per command
+			- simpler design for UART asm interrupt routine knowing every packet will be one byte
+	*- Packets sent every 50 ms
+		- Tests indicated that 50ms between commands was sufficiently fast that the motion of the car was indistinguishable from constant commands
+	*- Packets consumed every 25ms
+		- Will help to ensure the buffer is not filled
+	*- buffer = 10 bytes (approximately half a second of backlogged packets maximum)
+
+*: maybe sould send every 25ms and consume every 20ms so we wait a max of approximately 45ms

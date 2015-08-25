@@ -1,0 +1,44 @@
+void main()
+{
+    int forward,reverse;
+    printf("\n");
+    printf("Play with the   switches\n");
+    
+    while(1)
+      {
+        if(digital(15) || digital(14))
+          {
+            while(1)
+              {
+                forward = digital(15);
+                reverse = digital(14);
+                printf("Forward: %d      ", forward);
+                printf("Reverse: %d\n",reverse);
+                if(forward)
+                  {
+                    poke(0x7000,0b10000000);
+                    /*
+                    off(0);
+                    motor(0,50);
+                    msleep((long)1000);
+                    off(0);
+*/
+                }
+                
+                if (reverse)
+                  {
+                    off(3);
+                    motor(3,-50);
+                    msleep((long)100);
+                    off(3);
+                }
+                
+                if(stop_button())
+                  {
+                    ao();
+                    return; 
+                }
+            }
+        }
+    }
+}

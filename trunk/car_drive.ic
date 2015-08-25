@@ -1,0 +1,224 @@
+/*
+ * car_drive is a program which receives commands over the UART
+ * to drive motors and (possibly in a later version) a servo.
+ * It is intended to control a remote control car over a mesh
+ * network provided by ZigBee capable chips that transmit commands
+ * from a controller to the vehicle running this program.
+ *
+ * @author Peter Fyon
+ * 
+*/
+
+#include sci_isr.c
+#include header.ic
+#include protocol.ic
+
+// Motor number definitions
+#define MOTORDRIVE 0 // fwd/reverse drive motor
+#define MOTORTURN 1 // turn motor
+
+// Motor speed definitions
+#define FWDSPEED 75 // Speed to set forward motor
+#define REVSPEED -75 // Speed to set reverse motor
+#define STOPSPEED 0
+
+#define LEFTSPEED 30
+#define RIGHTSPEED -30
+
+#define SLEEP_DURATION 50L
+
+#define DEBUGGING 1
+
+//Arbitrary number to send to kill processes
+#define KILLPROCESS 99
+
+//direction
+// 0  - stop
+// 1  - forward
+// -1 - reverse
+int direction = 0;
+void goForward(){direction = 1;}
+void goReverse(){direction = -1;}
+void stop(){direction = 0;}
+
+//leftRight
+// 0  - centre wheels
+// 1  - right
+// -1 - left
+int leftRight = 0;
+void turnRight(){leftRight = 1;}
+void turnLeft(){leftRight = -1;}
+void centreWheels(){leftRight = 0;}
+
+void main()
+{
+    //Initialize code variable
+    int code = DONOTHING;
+    int forward = 0;
+    int reverse = 0;
+    int left = 0;
+    int right = 0;
+    int centre = 0;
+    int lastSeqNum = 0;   
+    
+    //Variables to store process IDs of the motor processes
+    int driveProcess = start_process(driveProcess());
+    int turnProcess = start_process(turnProcess());
+    
+    //Disable infra red decoding since we're not using it
+    disableIRDecoding();
+    
+    //Disable control of the UART by interactive C and set it up to use interrupts
+    initSerial();        
+    
+    if(DEBUGGING)
+      {
+        printf("\nStarted");
+    }
+    
+    //Loop
+    while(1)
+      {
+        while(!dataAvailable())
+          {
+            defer();
+        }
+        
+        code = serialGetChar();
+        if(DEBUGGING) printf("\n%d : %d",code, getSeqNum(code));
+        
+        if(matchesParity(code) && getSeqNum(code) != lastSeqNum)
+          {
+            //Packet's parity is correct and seq num is the next expected one
+            forward = code & FORWARD;
+            reverse = code & REVERSE;
+            left = code & LEFT;
+            right = code & RIGHT;
+            centre = code & CENTRE;
+            
+            //Alternate sequence number
+            lastSeqNum++;
+            lastSeqNum = lastSeqNum % 2;
+            
+            //Send an ACK for the packet received
+            sendAck(lastSeqNum);
+            printf("Ack %d",lastSeqNum);
+            
+            if(DEBUGGING) printf("\ncode: %b",code);
+            
+            //If the opcode is DONOTHING, stop moving
+            if(code != DONOTHING)
+              {
+                //BEGIN forward/reverse code
+                if((forward > 0) && (reverse == 0))
+                  {
+                    //Go forward
+                    goForward();
+                } else if((reverse > 0) && (forward == 0))
+                  {
+                    //Go reverse 
+                    goReverse();
+                }
+                //END forward/reverse code
+                
+                
+                //BEGIN left/right/centre code
+                if((left > 0) && (right == 0))
+                  {
+                    //Turn left
+                    turnLeft();
+                } else if((right > 0) && (left == 0))
+                  {
+                    //Turn right
+                    turnRight();
+                }
+                
+                //Need to use an if instead of else if because interactive C can't handle
+                // more than one else if in a row...apparently.
+                
+                //Centre opcode takes precedence over the other signals
+                if(centre > 0)
+                  {
+                    //Centre wheels
+                    centreWheels();
+                }
+                //END left/right/centre code
+            } else
+              {
+                //Do nothing
+                stop();
+            }
+            
+            //Sleep for 45ms
+            //msleep(SLEEP_DURATION);
+        } else
+          {
+            //Sequence number is out of order or packet is somehow mangled
+            //Reply with an ACK for the last successfully received packet
+            sendAck(lastSeqNum);
+            printf("Ack %d",lastSeqNum);
+        }
+    }
+    //Code currently cannot reach here
+    direction = KILLPROCESS;
+    leftRight = KILLPROCESS;
+    
+    
+}
+
+void driveProcess()
+{
+    while(direction != KILLPROCESS)
+      {
+        if(direction == 1)
+          {
+            //Go forward
+            motor(MOTORDRIVE,FWDSPEED);
+        }
+        if(direction == 0)
+          {
+            //Stop
+            off(MOTORDRIVE);
+        }
+        if(direction == -1)
+          {
+            //Go reverse
+            motor(MOTORDRIVE,REVSPEED);
+        }
+        
+        //Reset instruction to 0
+        //direction = 0;
+        msleep(SLEEP_DURATION);
+    }
+}
+
+void turnProcess()
+{
+    while(leftRight != KILLPROCESS)
+      {
+        if(leftRight == 1)
+          {
+            //Turn right
+            motor(MOTORTURN,RIGHTSPEED);
+        }
+        if(leftRight == 0)
+          {
+            //Centre wheels
+            off(MOTORTURN);
+        }
+        if(leftRight == -1)
+          {
+            //Turn left
+            motor(MOTORTURN,LEFTSPEED);
+        }
+        
+        msleep(SLEEP_DURATION);
+    }
+}
+
+void sendAck(int seqNum)
+{
+    //Create an ACK packet
+    int packet = createPacket(ACK, seqNum, 0);
+    serialPutChar(packet);
+}

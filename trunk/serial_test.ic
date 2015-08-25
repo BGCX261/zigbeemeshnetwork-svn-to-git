@@ -1,0 +1,22 @@
+/*
+ * Program to test the serial code on the handyboard.
+ */
+
+#include sci_isr.c
+
+void main()
+{
+ 
+    int receivedChar = 0;
+ 
+    
+    initSerial();
+    printf("\nStarting");
+    
+    while(!stop_button())
+      {
+        receivedChar = serialGetChar();
+        printf("\nReceived: %d",receivedChar);
+    }
+    closeSerial();
+}

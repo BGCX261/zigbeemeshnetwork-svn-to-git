@@ -1,0 +1,26 @@
+/*
+ * Program to test the assembly serial interrupt routine on the handyboard.
+ */
+
+#include sci_isr.c
+
+void main()
+{
+    int val = 0;
+    
+    initSerial();
+    printf("\nStarting");
+    
+    while(!stop_button())
+      {
+        if(start_button())
+          {
+            val = knob();
+            serialPutChar(val);
+            printf("\nSent: %d", val);
+            sleep(0.2);
+        }
+    }
+    printf("\nStopping");
+    closeSerial();
+}

@@ -1,0 +1,159 @@
+/*
+ * This file defines the protocol and provides methods to create and access contents of packets
+ *  
+ */
+
+//Default ACK packet for receiver: X1X00000
+//Default data packet:X0XXXXXX
+
+//Parity bit is calculated by adding together all the other bits in the packet
+#define paritybit 0b10000000
+
+//Used for the receiver to send ACKs back
+//1 for an ACK, 0 for a NAK
+//Set to ACK if it's a data packet
+#define acknakbit 0b01000000
+
+//Alternating sequence bit, initially 0
+#define seqnumbit 0b00100000
+#define databit0  0b00000001
+#define databit1  0b00000010
+#define databit2  0b00000100
+#define databit3  0b00001000
+#define databit4  0b00010000
+
+#define NAK 0
+#define ACK 1
+#define DATA 1
+
+//Returns true if the packet matches the parity bit, or false if it doesn't
+int matchesParity(int packet)
+{
+    int bitcount = 0;
+    int parity = 0;
+    
+    //Get the parity bit
+    if(packet & paritybit)
+      {
+        parity = 1;
+    }
+    
+    if(packet & acknakbit)
+      {
+        bitcount++;
+    }
+    
+    if(packet & seqnumbit)
+      {
+        bitcount++;
+    }
+    
+    if(packet & databit0)
+      {
+        bitcount++;
+    }
+    
+    if(packet & databit1)
+      {
+        bitcount++;
+    }
+    
+    if(packet & databit2)
+      {
+        bitcount++;
+    }
+    
+    if(packet & databit3)
+      {
+        bitcount++;
+    }
+    
+    if(packet & databit4)
+      {
+        bitcount++;
+    }
+    
+    if(bitcount % 2 == parity)
+      {
+        return 1;
+    } else
+      {
+        return 0;
+    }
+}
+
+int createPacket(int ack, int seqNum, int data)
+{
+    int packet = 0;
+    int parity;
+    
+    //Set the data bits
+    packet |= data;
+    
+    //Set the bit if it's an ACK/data packet
+    if(ack)
+      {
+        packet |= acknakbit;
+    }
+    
+    //Set the seqnum bit to whatever it should be
+    if(seqNum)
+      {
+        packet |= seqnumbit;
+    }
+    
+    parity = createParity(ack, seqNum, data);
+    
+    if(parity)
+      {
+        packet |= paritybit;
+    }
+}
+
+/*
+ * createParity takes the ack/nak, sequence number, and data bits and
+ * adds them together, returns the result mod 2 for parity bit
+ */
+int createParity(int ackNak, int seqNum, int data)
+{
+    int temp = 0;
+    int i;
+    int bitcount = 0;
+    
+    bitcount += ackNak;
+    bitcount += seqNum;
+    
+    //Add up the data bits
+    for(i = 0; i < 5; i++)
+      {
+        temp = data << 1;
+        if(temp)
+          {
+            bitcount++;
+        }
+    }
+    
+    return (bitcount % 2);
+}
+
+int getSeqNum(int packet)
+{
+    if(packet & seqnumbit)
+      {
+        return 1;
+    }
+    
+    return 0;
+}
+
+
+//The opposite is true, meaning !isAck() means it's a NAK
+int isAck(int packet)
+{
+    if(packet & acknakbit)
+      {
+        return 1;
+    }
+    
+    return 0;
+}

@@ -1,0 +1,67 @@
+/*
+ * controller is a program which sets the code upon receiving
+ * instructions from the microswitch signals from the 
+ * Handyboard.
+ *
+ * @author John Koh
+ * @date February 19, 2010
+ * 
+*/
+
+#include "header.ic"
+#include sci_isr.c
+
+//switch definitions, direction switch_number
+#define go_forward 15
+#define go_back 14
+#define go_left 13
+#define go_right 12
+#define center 11
+
+void main() {
+    int code = DONOTHING;
+    int dnflag = 0;
+    initSerial();
+    disableIRDecoding();
+    
+    while (1) {
+        if (digital(go_forward)) {
+            code = code + FORWARD;
+        } 
+        if (digital(go_back)) {
+            if ((digital(go_forward)) || 
+                (code & REVERSE == REVERSE)  || 
+                (code & FORWARD == FORWARD)) {
+                code = code;
+            } else {
+                code = code + REVERSE;
+            }
+        } 
+        if (digital(go_left)) {
+            code = code + LEFT;
+        } 
+        else if (digital(go_right)) {
+            code = code + RIGHT;
+        } 
+        if (digital(center)) {
+            code = CENTRE;
+        }
+        
+        
+        printf("%d \n",code);
+        if ((code == DONOTHING) && (dnflag == 1)) {
+            
+        }else if (code == DONOTHING){
+            dnflag = 1;
+            serialPutChar(code);
+        }else{
+            serialPutChar(code);
+            dnflag = 0;
+        }
+        
+        msleep(100L);
+        code = DONOTHING;
+    }
+}
+
+

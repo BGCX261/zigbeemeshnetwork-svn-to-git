@@ -1,0 +1,53 @@
+/*
+ * Program to test the opcodes for car_drive over the serial port.
+ */
+
+#include sci_isr.c
+#include constants.ic
+
+void main()
+{
+    int val;
+    int opcode[] = {CENTRE, FORWARD, REVERSE, LEFT, RIGHT, DONOTHING};
+    int i = 0;
+    
+    initSerial();
+    
+    while(1)
+      {
+        if(start_button())
+          {
+            val = opcode[i];
+            i++;
+            
+            if(i == 6)
+              {
+                i = 0;
+            }
+        }
+        
+        if(stop_button())
+          {
+            serialPutChar(val);
+            printf("\nSent: %d", val);
+            msleep(50L);
+        }
+    }
+    
+    
+    /*
+        //for(i = 0; i < 6; i++)
+        while(i < 6)
+          {
+            val = opcode[i];
+            serialPutChar(val);
+            printf("\nSent: %d", val);
+            sleep(0.2);
+            
+            while(!start_button()){}
+            i++;
+        }
+        i = 0;
+*/
+}
+

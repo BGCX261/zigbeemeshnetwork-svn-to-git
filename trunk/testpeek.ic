@@ -1,0 +1,7 @@
+void main()
+{
+    int peekval;
+    
+    peekval = peek(0x1028);
+    printf("%b\n",peekval);
+}

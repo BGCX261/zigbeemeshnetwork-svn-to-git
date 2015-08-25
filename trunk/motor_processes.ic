@@ -1,0 +1,54 @@
+int forward;
+int reverse;
+int knobvalue;
+
+int go_forward()
+{
+    while(1)
+      {
+        if(forward)
+          {
+            motor(0,knobvalue);
+            msleep((long) 50);
+            off(0);
+        }
+    }
+}
+
+int go_reverse()
+{
+    while(1)
+      {
+        if(reverse)
+          {
+            motor(3,knobvalue);
+            msleep((long) 50);
+            off(3);
+        }
+    }
+}
+
+void main()
+{
+    printf("\n");
+    printf("Play with the   switches\n");
+    
+    start_process(go_forward());    
+    start_process(go_reverse());
+    
+    while(1)
+      {
+        if(digital(14) || digital(15))
+          {
+            while(1)
+              {
+                forward = digital(14);
+                reverse = digital(15);
+                knobvalue = knob()-127;
+                printf("Knob: %d\n", knobvalue);
+                //printf("Forward: %d      ", forward);
+                //printf("Reverse: %d\n",reverse);                
+            }
+        }    
+    }
+}

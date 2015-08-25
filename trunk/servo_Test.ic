@@ -1,0 +1,35 @@
+//#include servo-xbc-compat.ic
+
+void main()
+{
+    //initial position
+    int position = 0;
+    enable_servos();
+    set_servo_position(0,position);
+    
+    while(1)
+      {
+        
+        if(start_button())
+          {
+            position++;
+            if (position >= 255)
+              {
+                position = 255;
+            }
+            
+        }
+        
+        if(stop_button())
+          {
+            position--;
+            if (position <= 0)
+              {
+                position = 0;
+            }
+        }
+        
+        set_servo_position(0,position);
+        //if(stop_button()) ;
+    }
+}
